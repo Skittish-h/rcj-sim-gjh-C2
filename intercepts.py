@@ -21,6 +21,16 @@ class interceptCalculator():
     #print's balls point history
     def printPointHistory(self):
         print(self.pastIntercepts)
+
+    def motion_veri(self):
+        
+        diff_x1 = self.pastIntercepts[-2]['x'] - self.pastIntercepts[-3]['x']
+        diff_x2 = self.pastIntercepts[-1]['x'] - self.pastIntercepts[-2]['x']
+
+        diff_y1 = self.pastIntercepts[-2]['y'] - self.pastIntercepts[-3]['y']
+        diff_y2 = self.pastIntercepts[-1]['y'] - self.pastIntercepts[-2]['y']
+    
+        return (diff_x1 * diff_x2) < 0 or (diff_y1 * diff_y2) < 0
     
 
     #estimate gradient of
