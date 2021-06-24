@@ -9,9 +9,18 @@ from rcj_soccer_robot import RCJSoccerRobot, TIME_STEP
 import utils
 
 from intercepts import interceptCalculator
-from CoordinateRecalculator import coor_recalc, robot_pos_recalc
+from CoordinateRecalculator import coor_recalc, robot_pos_recalc, inverse_point
 from GoToFunc import goTo
 from MovementCalculator import fit_parabola, get_tangent_point, passes_boundary, scores_own_goal
+
+STARTING_POS =  {'x': 0.21979533333333334, 'y': 0.7072653846153846}
+TARGET_POS_Y1 = {'x': STARTING_POS['x'], 'y': 0}
+CAMPING_POS_Y1 = {'x': STARTING_POS['x'], 'y':1}
+
+def BALL_IN_QUADRANT_Y1(ball):
+    if ball['x']< 0.36 and ball['y']> 0.57:
+        return True
+    return False
 
 
 class MyBallPassingRobot1(RCJSoccerRobot):
@@ -30,17 +39,34 @@ class MyBallPassingRobot1(RCJSoccerRobot):
                 robot_pos = robot_pos_recalc(data[self.name], Team)
                 # Get the position of the ball
                 ball_pos = coor_recalc(data['ball']['x'], data['ball']['y'], Team)
-                
+                print(ball_pos)
+
                 self.intercept_c.pushPoint(ball_pos)
                 
-                intercept = self.intercept_c.calculateOptimumIntercept(robot_pos, Team, sample_count=200)
+                if BALL_IN_QUADRANT_Y1(ball_pos):
+                    intercept = self.intercept_c.calculateOptimumIntercept(robot_pos, Team, sample_count=200)
+                    
+                    
+                    inverse_intercept = inverse_point(intercept)
+                    inverse_robot_pos = inverse_point(robot_pos)
+                    
+                    inverse_target = inverse_point(TARGET_POS_Y1)
+                    #dst
+                    print(inverse_robot_pos)
+                    print(inverse_intercept)
+                    print(inverse_target)
 
-                x = fit_parabola(intercept, robot_pos ,{'x':(0.0 if Team else 1.0),"y":0.5})
-                if not passes_boundary(x):
-                    point = get_tangent_point(robot_pos, x, Team)
+
+                    x = fit_parabola(inverse_intercept, inverse_robot_pos , inverse_target)
+
+                    x['a'] = (1/0.96)*x['a']
+                    point = get_tangent_point(inverse_robot_pos, x, Team,is_inverse=True)
                     ball_angle, robot_angle = self.get_angles(point, robot_pos)
-                
-                    out = goTo(point['x'], point['y'], robot_pos, robot_angle, should_soften=False)
+                    print("point", point)
+                    out = goTo(point['y'], point['x'], robot_pos, robot_angle, should_soften=False)
+                else:
+                    all_angle, robot_angle = self.get_angles(CAMPING_POS_Y1, robot_pos)
+                    out = goTo(CAMPING_POS_Y1['x'], CAMPING_POS_Y1['y'], robot_pos, robot_angle, should_soften=False)
                 # Get angle between the robot and the ball
                 # and between the robot and the north
 

@@ -11,3 +11,8 @@ def robot_pos_recalc(robot_pos: dict, Team=True):
   new = coor_recalc(robot_pos['x'], robot_pos['y'], team=Team)
   new['orientation'] = temp_orientation
   return new
+
+def inverse_point(point: dict):
+  tempx = point['x']
+  tempy = point['y']
+  return {'x': tempy, 'y':tempx}
